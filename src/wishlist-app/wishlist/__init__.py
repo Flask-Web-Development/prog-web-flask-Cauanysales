@@ -4,7 +4,7 @@ from flask import Flask
 
 
 def create_app(test_config=None):
-    # create and configure the app
+    # Cria e configura a aplicação
     app = Flask(__name__, instance_relative_config=True)
 
     app.config.from_mapping(
@@ -17,10 +17,12 @@ def create_app(test_config=None):
     else:
         app.config.from_mapping(test_config)
 
+    # Garante que a pasta instance exista
     os.makedirs(app.instance_path, exist_ok=True)
 
+    # Página inicial temporária
     @app.route('/')
     def index():
-        return 'Wishlist App'
+        return '<h1>Wishlist App</h1>'
 
     return app
