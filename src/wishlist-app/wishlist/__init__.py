@@ -25,4 +25,7 @@ def create_app(test_config=None):
     def index():
         return '<h1>Wishlist App</h1>'
 
+from . import db
+db.init_app(app)
+
     return app
