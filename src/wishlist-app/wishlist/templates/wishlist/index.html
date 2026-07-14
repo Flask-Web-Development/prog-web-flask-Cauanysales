@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Minha Wishlist
+{% endblock %}
+
+{% block content %}
+
+<h2>Meus desejos</h2>
+
+<a href="{{ url_for('wishlist.create') }}">
+    Novo desejo
+</a>
+
+{% for wish in wishes %}
+
+<article>
+
+<h3>{{ wish['title'] }}</h3>
+
+<p>{{ wish['description'] }}</p>
+
+<p>
+Preço: R$ {{ wish['price'] }}
+</p>
+
+{% if wish['link'] %}
+<a href="{{ wish['link'] }}" target="_blank">
+Ver produto
+</a>
+{% endif %}
+
+
+<a href="{{ url_for('wishlist.update', id=wish['id']) }}">
+Editar
+</a>
+
+
+<form method="post" action="{{ url_for('wishlist.delete', id=wish['id']) }}">
+<button type="submit">
+Excluir
+</button>
+</form>
+
+
+</article>
+
+<hr>
+
+{% else %}
+
+<p>Nenhum desejo cadastrado.</p>
+
+{% endfor %}
+
+
+{% endblock %}

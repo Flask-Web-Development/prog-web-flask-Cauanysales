@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Editar desejo
+{% endblock %}
+
+
+{% block content %}
+
+<h2>Editar desejo</h2>
+
+
+<form method="post">
+
+<label>Nome</label>
+
+<input 
+name="title"
+value="{{ wish['title'] }}"
+required
+>
+
+
+<label>Descrição</label>
+
+<textarea name="description">{{ wish['description'] }}</textarea>
+
+
+<label>Link</label>
+
+<input 
+name="link"
+value="{{ wish['link'] }}"
+>
+
+
+<label>Preço</label>
+
+<input 
+name="price"
+type="number"
+step="0.01"
+value="{{ wish['price'] }}"
+>
+
+
+<button type="submit">
+Atualizar
+</button>
+
+
+</form>
+
+
+{% endblock %}

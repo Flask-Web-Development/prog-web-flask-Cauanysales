@@ -1,0 +1,233 @@
+from flask import (
+    Blueprint, flash, g, redirect, render_template,
+    request, url_for, abort
+)
+
+from wishlist.auth import login_required
+from wishlist.db import get_db
+
+bp = Blueprint('wishlist', __name__)
+from flask import (
+    Blueprint, flash, g, redirect,
+    render_template, request, url_for, abort
+)
+
+from wishlist.db import get_db
+from wishlist.auth import login_required
+
+bp = Blueprint('wishlist', __name__)
+
+
+@bp.route('/')
+@login_required
+def index():
+    db = get_db()
+
+    wishes = db.execute(
+        '''
+        SELECT w.id, title, description, link, price, created, author_id, username
+        FROM wish w JOIN user u ON w.author_id = u.id
+        WHERE w.author_id = ?
+        ORDER BY created DESC
+        ''',
+        (g.user['id'],)
+    ).fetchall()
+
+    return render_template('wishlist/index.html', wishes=wishes)
+
+
+@bp.route('/create', methods=('GET', 'POST'))
+@login_required
+def create():
+
+    if request.method == 'POST':
+        title = request.form['title']
+        description = request.form['description']
+        link = request.form['link']
+        price = request.form['price']
+
+        error = None
+
+        if not title:
+            error = 'O título é obrigatório.'
+
+        if error is not None:
+            flash(error)
+        else:
+            db = get_db()
+
+            db.execute(
+                '''
+                INSERT INTO wish
+                (title, description, link, price, author_id)
+                VALUES (?, ?, ?, ?, ?)
+                ''',
+                (title, description, link, price, g.user['id'])
+            )
+
+            db.commit()
+
+            return redirect(url_for('wishlist.index'))
+
+    return render_template('wishlist/create.html')
+
+
+def get_wish(id, check_author=True):
+
+    wish = get_db().execute(
+        '''
+        SELECT w.id, title, description, link, price, created, author_id
+        FROM wish w
+        WHERE w.id = ?
+        ''',
+        (id,)
+    ).fetchone()
+
+    if wish is None:
+        abort(404)
+
+    if check_author and wish['author_id'] != g.user['id']:
+        abort(403)
+
+    return wish
+
+
+@bp.route('/<int:id>/update', methods=('GET', 'POST'))
+@login_required
+def update(id):
+
+    wish = get_wish(id)
+
+    if request.method == 'POST':
+
+        title = request.form['title']
+        description = request.form['description']
+        link = request.form['link']
+        price = request.form['price']
+
+        db = get_db()
+
+        db.execute(
+            '''
+            UPDATE wish
+            SET title = ?, description = ?, link = ?, price = ?
+            WHERE id = ?
+            ''',
+            (title, description, link, price, id)
+        )
+
+        db.commit()
+
+        return redirect(url_for('wishlist.index'))
+
+    return render_template('wishlist/update.html', wish=wish)
+
+
+@bp.route('/<int:id>/delete', methods=('POST',))
+@login_required
+def delete(id):
+
+    get_wish(id)
+
+    db = get_db()
+
+    db.execute(
+        'DELETE FROM wish WHERE id = ?',
+        (id,)
+    )
+
+    db.commit()
+
+    return redirect(url_for('wishlist.index'))
+@bp.route('/')
+def index():
+    db = get_db()
+    wishes = db.execute(
+        '''
+        SELECT w.id, title, description, created, author_id, username
+        FROM wish w JOIN user u
+        ON w.author_id = u.id
+        ORDER BY created DESC
+        '''
+    ).fetchall()
+
+    return render_template('wishlist/index.html', wishes=wishes)
+
+@bp.route('/create', methods=('GET', 'POST'))
+@login_required
+def create():
+    if request.method == 'POST':
+        title = request.form['title']
+        description = request.form['description']
+        error = None
+
+        if not title:
+            error = 'O título é obrigatório.'
+
+        if error is not None:
+            flash(error)
+        else:
+            db = get_db()
+            db.execute(
+                'INSERT INTO wish (title, description, author_id) VALUES (?, ?, ?)',
+                (title, description, g.user['id'])
+            )
+            db.commit()
+            return redirect(url_for('wishlist.index'))
+
+    return render_template('wishlist/create.html')
+
+def get_wish(id, check_author=True):
+    wish = get_db().execute(
+        'SELECT w.id, title, description, created, author_id, username '
+        'FROM wish w JOIN user u ON w.author_id = u.id '
+        'WHERE w.id = ?',
+        (id,),
+    ).fetchone()
+
+    if wish is None:
+        abort(404, f"Wish id {id} doesn't exist.")
+
+    if check_author and wish['author_id'] != g.user['id']:
+        abort(403)
+
+    return wish
+
+
+@bp.route('/<int:id>/update', methods=('GET', 'POST'))
+@login_required
+def update(id):
+    wish = get_wish(id)
+
+    if request.method == 'POST':
+        title = request.form['title']
+        description = request.form['description']
+        error = None
+
+        if not title:
+            error = 'O título é obrigatório.'
+
+        if error is not None:
+            flash(error)
+        else:
+            db = get_db()
+            db.execute(
+                'UPDATE wish SET title = ?, description = ? WHERE id = ?',
+                (title, description, id)
+            )
+            db.commit()
+            return redirect(url_for('wishlist.index'))
+
+    return render_template('wishlist/update.html', wish=wish)
+
+
+    @bp.route('/<int:id>/delete', methods=('POST',))
+@login_required
+def delete(id):
+    get_wish(id)
+
+    db = get_db()
+    db.execute('DELETE FROM wish WHERE id = ?', (id,))
+    db.commit()
+
+    return redirect(url_for('wishlist.index'))
